@@ -1,0 +1,10 @@
+{
+  "name": "syntax-validator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo of Dockerized syntax/lint validators for test frameworks (TypeScript + ESLint). Currently: Cypress. Planned: Playwright, Jest.",
+  "workspaces": [
+    "packages/core",
+    "packages/validators/*"
+  ]
+}
