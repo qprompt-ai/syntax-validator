@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://syntax-validator/schemas/validation-report.schema.json",
+  "title": "Validation Report",
+  "description": "Shape of the JSON report produced by buildReport() in packages/core/lib/report.js and printed to stdout by every framework validator (e.g. validate-cypress).",
+  "type": "object",
+  "required": ["validator", "version", "project", "executionTimeMs", "valid", "summary", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "validator": {
+      "type": "string",
+      "description": "Name of the validator that produced the report, e.g. \"validate-cypress\"."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the validator that produced the report."
+    },
+    "project": {
+      "type": "object",
+      "required": ["root", "tsconfig"],
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "string",
+          "description": "Absolute path to the project root that was validated."
+        },
+        "tsconfig": {
+          "type": ["string", "null"],
+          "description": "Absolute path to the resolved tsconfig.json, or null if none was found."
+        }
+      }
+    },
+    "executionTimeMs": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Wall-clock time the validation run took, in milliseconds."
+    },
+    "valid": {
+      "type": "boolean",
+      "description": "True when there are zero TypeScript diagnostics and zero ESLint errors (warnings do not affect this)."
+    },
+    "summary": {
+      "type": "object",
+      "required": ["typescriptErrors", "eslintErrors", "eslintWarnings"],
+      "additionalProperties": false,
+      "properties": {
+        "typescriptErrors": { "type": "integer", "minimum": 0 },
+        "eslintErrors": { "type": "integer", "minimum": 0 },
+        "eslintWarnings": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "categories": {
+      "type": "object",
+      "description": "Per-tool diagnostic lists. typescript/eslint/prettier are always present; validators may add further framework-specific categories (e.g. cypress, customRules).",
+      "required": ["typescript", "eslint", "prettier"],
+      "additionalProperties": { "type": "array" },
+      "properties": {
+        "typescript": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/typescriptDiagnostic" }
+        },
+        "eslint": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/eslintMessage" }
+        },
+        "prettier": {
+          "type": "array",
+          "items": {}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "typescriptDiagnostic": {
+      "type": "object",
+      "required": ["category", "code", "errorType", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["Warning", "Error", "Suggestion", "Message"],
+          "description": "TypeScript's own diagnostic category name."
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^TS[0-9]+$",
+          "description": "TypeScript diagnostic code, e.g. \"TS2304\"."
+        },
+        "errorType": {
+          "type": "string",
+          "description": "Human-friendly label mapped from the TS code (see mapTsError), e.g. \"UndefinedVariable\", \"SyntaxError\", \"TypeScriptError\"."
+        },
+        "message": { "type": "string" },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "eslintMessage": {
+      "type": "object",
+      "required": ["severity", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "ruleId": {
+          "type": ["string", "null"],
+          "description": "ESLint rule id that triggered the message, e.g. \"no-unused-vars\". Absent for internal/lint-run errors."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning"]
+        },
+        "message": { "type": "string" },
+        "file": {
+          "type": "string",
+          "description": "Absent when the entry represents a lint-run failure rather than a rule violation."
+        },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
